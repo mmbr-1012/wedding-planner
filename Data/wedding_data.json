@@ -1,0 +1,92 @@
+{
+  "recursos": [
+    {
+      "id": 1,
+      "nombre": "Salón Principal",
+      "tipo": "Locación",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 2,
+      "nombre": "Jardín Exterior",
+      "tipo": "Locación",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 3,
+      "nombre": "Chef Ejecutivo",
+      "tipo": "Personal",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 4,
+      "nombre": "Cocina Gourmet",
+      "tipo": "Equipamiento",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 5,
+      "nombre": "Banda en Vivo",
+      "tipo": "Entretenimiento",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 6,
+      "nombre": "Sistema de Sonido Premium",
+      "tipo": "Audio",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 7,
+      "nombre": "Barra Libre Premium",
+      "tipo": "Servicio",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 8,
+      "nombre": "Mesa Principal Decorada",
+      "tipo": "Mobiliario",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 9,
+      "nombre": "Fotógrafo Principal",
+      "tipo": "Fotografía",
+      "capacidad": 1,
+      "eventos_asignados": []
+    },
+    {
+      "id": 10,
+      "nombre": "Sala de Preparación",
+      "tipo": "Locación",
+      "capacidad": 1,
+      "eventos_asignados": []
+    }
+  ],
+  "eventos": [],
+  "restricciones": [
+    {
+      "tipo": "co-requisito",
+      "recursos_involucrados": [3, 4],
+      "descripcion": "Chef Ejecutivo requiere Cocina Gourmet"
+    },
+    {
+      "tipo": "co-requisito",
+      "recursos_involucrados": [5, 6],
+      "descripcion": "Banda en Vivo requiere Sistema de Sonido Premium"
+    },
+    {
+      "tipo": "exclusion",
+      "recursos_involucrados": [1, 2],
+      "descripcion": "Salón Principal y Jardín no pueden usarse simultáneamente"
+    }
+  ]
+}
