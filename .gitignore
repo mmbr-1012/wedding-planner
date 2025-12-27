@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-selfcheck.json
+
+# Virtual environments
+venv/
+venv3/
+virtualenv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Sistema
+Thumbs.db
+desktop.ini
+
+# Datos locales
+data/
+*.db
+*.sqlite3
+*.json
+!requirements.txt
+
+# Archivos temporales
+*.log
+*.tmp
+*.temp
+
+# Archivos de configuración local
+config_local.py
+.env
+secrets.json
+
+# Streamlit
+.streamlit/
