@@ -16,8 +16,8 @@ def verificar_estructura():
         print("✅ Carpeta 'data/' creada")
     
     # Carpeta para el paquete (debería existir)
-    if not os.path.exists("dream_wedding"):
-        print("❌ ERROR: No se encontró la carpeta 'dream_wedding/'")
+    if not os.path.exists("Logic"):
+        print("❌ ERROR: No se encontró la carpeta 'Logic/'")
         print("💡 Asegúrate de que todos los archivos del módulo estén en su lugar")
         return False
     
