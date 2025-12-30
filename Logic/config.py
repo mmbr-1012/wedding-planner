@@ -111,7 +111,7 @@ def obtener_paquetes() -> dict:
     """Devuelve todos los paquetes disponibles"""
     return Config.PAQUETES
 
-def obtener_colores() -> dict:
+def obtener_colores():
     """Devuelve todos los colores disponibles"""
     return Config.COLORES
 
