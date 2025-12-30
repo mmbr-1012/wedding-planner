@@ -3,7 +3,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-import Logic  # Cambiado de dream_wedding a Logic
+import Logic  
 
 # Configuración de página
 st.set_page_config(
@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==================== ESTILOS CSS ====================
+#  ESTILOS CSS 
 def aplicar_estilos():
     """Aplica estilos CSS personalizados"""
     colores = Logic.obtener_colores()  # Cambiado aquí
@@ -66,7 +66,7 @@ def aplicar_estilos():
     </style>
     """, unsafe_allow_html=True)
 
-# ==================== PÁGINAS ====================
+#  PÁGINAS 
 def pagina_dashboard():
     """Página principal del dashboard"""
     st.title("🏠 Dashboard - Dream Wedding Planner")
@@ -427,7 +427,7 @@ def pagina_recursos():
     else:
         st.info("No hay recursos cargados en el sistema.")
 
-# ==================== MENÚ LATERAL ====================
+#  MENÚ LATERAL 
 def menu_lateral():
     """Renderiza el menú lateral de navegación"""
     colores = Logic.obtener_colores()  # Cambiado
@@ -474,7 +474,7 @@ def menu_lateral():
     # Actualizar página en session_state
     st.session_state.pagina = opciones[seleccion]
 
-# ==================== APLICACIÓN PRINCIPAL ====================
+#  APLICACIÓN PRINCIPAL 
 def main():
     """Función principal de la aplicación"""
     
