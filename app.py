@@ -1,12 +1,9 @@
-"""
-INTERFAZ PRINCIPAL - Dream Wedding Planner
-Interfaz Streamlit que importa todo del módulo dream_wedding
-"""
+# INTERFAZ PRINCIPAL
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-import Logic as log
+import Logic  # Cambiado de dream_wedding a Logic
 
 # Configuración de página
 st.set_page_config(
@@ -16,10 +13,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ESTILOS CSS 
+# ==================== ESTILOS CSS ====================
 def aplicar_estilos():
     """Aplica estilos CSS personalizados"""
-    colores = log.obtener_colores()
+    colores = Logic.obtener_colores()  # Cambiado aquí
     
     st.markdown(f"""
     <style>
@@ -66,20 +63,16 @@ def aplicar_estilos():
         .stButton > button:hover {{
             background-color: {colores['ROSADO_PROFUNDO']};
         }}
-        
-        .stTab > div > div > div {{
-            background-color: {colores['BLANCO_HUESO']};
-        }}
     </style>
     """, unsafe_allow_html=True)
 
-# FUNCIONES DE PÁGINAS
+# ==================== PÁGINAS ====================
 def pagina_dashboard():
     """Página principal del dashboard"""
     st.title("🏠 Dashboard - Dream Wedding Planner")
     
     # Estadísticas
-    stats = log.planner.obtener_estadisticas()
+    stats = Logic.planner.obtener_estadisticas()  # Cambiado aquí
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -93,7 +86,7 @@ def pagina_dashboard():
     
     # Próximos eventos
     st.subheader("📅 Próximas Bodas")
-    eventos_proximos = log.planner.obtener_eventos_proximos(30)
+    eventos_proximos = Logic.planner.obtener_eventos_proximos(30)  # Cambiado aquí
     
     if eventos_proximos:
         for evento in eventos_proximos:
@@ -106,8 +99,6 @@ def pagina_dashboard():
                 with col2:
                     st.write(f"**Presupuesto:** ${evento.presupuesto:,}")
                     st.write(f"**Estado:** {evento.estado}")
-                    if evento.descripcion:
-                        st.write(f"**Descripción:** {evento.descripcion}")
     else:
         st.info("No hay bodas programadas en los próximos 30 días")
     
@@ -233,14 +224,14 @@ def pagina_calculadora():
     with col1:
         if st.button("🧮 Calcular Presupuesto Total", type="primary", use_container_width=True):
             if st.session_state.selecciones:
-                total, detalles = log.calculadora.calcular(st.session_state.selecciones)
+                total, detalles = Logic.calculadora.calcular(st.session_state.selecciones)  # Cambiado
                 st.session_state.resultado_calculo = {"total": total, "detalles": detalles}
             else:
                 st.warning("Por favor, selecciona al menos una opción")
     
     if 'resultado_calculo' in st.session_state:
         resultado = st.session_state.resultado_calculo
-        colores = log.obtener_colores()
+        colores = Logic.obtener_colores()  # Cambiado
         
         st.markdown(f"""
         <div style="background-color: {colores['ROSADO_PASTEL']}; padding: 20px; border-radius: 10px; text-align: center;">
@@ -268,7 +259,7 @@ def pagina_crear_boda():
     
     # Mostrar paquetes
     col1, col2, col3 = st.columns(3)
-    paquetes = log.obtener_paquetes()
+    paquetes = Logic.obtener_paquetes()  # Cambiado
     
     with col1:
         st.markdown(f"""
@@ -346,7 +337,7 @@ def pagina_temas():
     """Página para explorar temas de boda"""
     st.title("🎨 Temas de Boda")
     
-    temas = log.obtener_temas()
+    temas = Logic.obtener_temas()  # Cambiado
     
     for nombre, info in temas.items():
         with st.expander(f"🎯 {nombre}"):
@@ -377,7 +368,7 @@ def pagina_recursos():
     """Página para ver y gestionar recursos"""
     st.title("🏛️ Recursos Disponibles")
     
-    recursos = log.planner.obtener_todos_recursos()
+    recursos = Logic.planner.obtener_todos_recursos()  # Cambiado
     
     if recursos:
         # Crear DataFrame
@@ -436,10 +427,10 @@ def pagina_recursos():
     else:
         st.info("No hay recursos cargados en el sistema.")
 
-# MENÚ LATERAL 
+# ==================== MENÚ LATERAL ====================
 def menu_lateral():
     """Renderiza el menú lateral de navegación"""
-    colores = log.obtener_colores()
+    colores = Logic.obtener_colores()  # Cambiado
     
     st.sidebar.markdown(f"""
     <div style="text-align: center; font-size: 60px; margin-bottom: 10px;">
@@ -449,7 +440,7 @@ def menu_lateral():
         Dream Wedding
     </div>
     <div style="text-align: center; color: {colores['ROJO_PASTEL']}; font-size: 14px; margin-bottom: 20px;">
-        Planner Suite v{log.__version__}
+        Planner Suite v{Logic.__version__}
     </div>
     """, unsafe_allow_html=True)
     
@@ -472,7 +463,7 @@ def menu_lateral():
     st.sidebar.markdown("---")
     
     # Información del sistema
-    stats = log.planner.obtener_estadisticas()
+    stats = Logic.planner.obtener_estadisticas()  # Cambiado
     st.sidebar.caption(f"📊 **Estadísticas:**")
     st.sidebar.caption(f"• Eventos: {stats['total_eventos']}")
     st.sidebar.caption(f"• Recursos: {stats['recursos_disponibles']}/{stats['recursos_totales']} disp.")
@@ -483,7 +474,7 @@ def menu_lateral():
     # Actualizar página en session_state
     st.session_state.pagina = opciones[seleccion]
 
-# APLICACIÓN PRINCIPAL
+# ==================== APLICACIÓN PRINCIPAL ====================
 def main():
     """Función principal de la aplicación"""
     
