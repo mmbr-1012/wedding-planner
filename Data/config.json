@@ -1,6 +1,9 @@
 {
   "empresa": "Dream Wedding Planner",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "moneda": "USD",
-  "notificaciones": true
+  "notificaciones": true,
+  "max_invitados": 500,
+  "impuestos": 16.0,
+  "deposito_confirmacion": 30.0
 }

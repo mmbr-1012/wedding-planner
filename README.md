@@ -52,7 +52,7 @@ pip install -r requirements.txt
 Ejecutar aplicación
 
 bash
-streamlit run app_streamlit.py
+streamlit run run.py
 Abrir en navegador
 
 text

@@ -1,69 +1,42 @@
-from typing import Dict, Tuple, List
+# Calculadora de presupuestos para bodas
 
-class BudgetCalculatorLogic:
+from typing import Dict, Tuple, List, Any
+from .config import Config
+
+class CalculadoraPresupuesto:
+    """Calculadora de presupuesto para bodas"""
     
-    PRECIOS = {
-        "jardin": {"precio": 2000, "capacidad": "150-200"},
-        "salon": {"precio": 3000, "capacidad": "100-250"},
-        "capilla": {"precio": 4000, "capacidad": "100-300"},
-        "playa": {"precio": 5000, "capacidad": "80-120"},
-        
-        "coordinador_bodas": 2500,
-        "fotografo_principal": 3000,
-        "video_profesional": 2000,
-        "dj_musica": 1500,
-        "chef_ejecutivo": 4000,
-        "meseros": 800,
-        "florista": 2000,
-        "pastelero": 1000,
-        
-        "salon_principal": 5000,
-        "terraza": 3000,
-        "jardin_exterior": 4000,
-        "carpa_lujo": 4500,
-        
-        "arco_floral": 800,
-        "centro_mesa": 50,
-        "candelabros": 300,
-        "cortinas_telones": 600,
-        "alfombras": 400,
-        "letreros": 200,
-        "globos": 150,
-        "fuente_chocolate": 700,
-        "fuente_champan": 600,
-        
-        "tarta_nupcial": 500,
-        "libro_firmas_lujo": 150,
-        "transporte_especial": 800,
-        "pirotecnia": 1200,
-    }
-    
-    @classmethod
-    def calcular_presupuesto(cls, selecciones: Dict) -> Tuple[float, List[str]]:
+    @staticmethod
+    def calcular(selecciones: Dict[str, Any]) -> Tuple[float, List[str]]:
+        """Calcula el presupuesto basado en selecciones"""
         total = 0
         detalles = []
         
         for item, cantidad in selecciones.items():
-            if item in cls.PRECIOS:
-                if isinstance(cls.PRECIOS[item], dict):
-                    precio = cls.PRECIOS[item]["precio"]
+            if item in Config.PRECIOS:
+                if isinstance(Config.PRECIOS[item], dict):
+                    precio = Config.PRECIOS[item]["precio"]
                 else:
-                    precio = cls.PRECIOS[item]
+                    precio = Config.PRECIOS[item]
                 
-                subtotal = precio * (cantidad if isinstance(cantidad, (int, float)) and cantidad > 0 else 1)
+                if isinstance(cantidad, (int, float)) and cantidad > 0:
+                    subtotal = precio * cantidad
+                else:
+                    subtotal = precio
+                
                 total += subtotal
-                
-                nombre_formateado = cls._formatear_nombre_item(item)
+                nombre = CalculadoraPresupuesto._formatear_nombre(item)
                 
                 if cantidad > 1:
-                    detalles.append(f"{nombre_formateado}: ${precio:,} x {cantidad} = ${subtotal:,}")
+                    detalles.append(f"{nombre}: ${precio:,} x {cantidad} = ${subtotal:,}")
                 else:
-                    detalles.append(f"{nombre_formateado}: ${precio:,}")
+                    detalles.append(f"{nombre}: ${precio:,}")
         
         return total, detalles
     
-    @classmethod
-    def _formatear_nombre_item(cls, item: str) -> str:
+    @staticmethod
+    def _formatear_nombre(item: str) -> str:
+        """Formatea nombres de items para mostrar"""
         nombres = {
             "jardin": "Jardín para Ceremonia",
             "salon": "Salón Principal",
