@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 import os
 import sys
 
+# Añadir directorio actual al path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 # Importaciones
 from Logic.config import ConfiguracionApp, ColorPaleta, obtener_colores, obtener_temas, obtener_paquetes
 from Logic.wedding_manager import DreamWeddingPlanner
@@ -29,7 +32,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-#  ESTILOS CSS MEJORADOS 
+# ==================== ESTILOS CSS MEJORADOS ====================
 def aplicar_estilos():
     """Aplica estilos CSS personalizados mejorados"""
     st.markdown(f"""
@@ -166,7 +169,7 @@ def aplicar_estilos():
     </style>
     """, unsafe_allow_html=True)
 
-#  PÁGINAS 
+# ==================== PÁGINAS ====================
 
 def pagina_dashboard():
     """Página principal del dashboard"""
@@ -249,17 +252,17 @@ def pagina_dashboard():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("💍 Crear Nueva Boda", use_container_width=True, type="primary"):
+        if st.button("💍 Crear Nueva Boda", use_container_width=True, type="primary", key="btn_dashboard_crear"):
             st.session_state.pagina = "crear_boda"
             st.rerun()
     
     with col2:
-        if st.button("💰 Calcular Presupuesto", use_container_width=True):
+        if st.button("💰 Calcular Presupuesto", use_container_width=True, key="btn_dashboard_calc"):
             st.session_state.pagina = "calculadora"
             st.rerun()
     
     with col3:
-        if st.button("🛏️ Ver Recursos", use_container_width=True):
+        if st.button("🛏️ Ver Recursos", use_container_width=True, key="btn_dashboard_recursos"):
             st.session_state.pagina = "recursos"
             st.rerun()
 
@@ -727,7 +730,7 @@ def pagina_buscar_horario():
                 st.error("❌ No se encontró ningún horario disponible en el próximo año para esta combinación de recursos.")
                 st.info("💡 Intenta con otros recursos o una fecha diferente.")
 
-#  MENÚ LATERAL 
+# ==================== MENÚ LATERAL ====================
 def menu_lateral():
     """Renderiza el menú lateral de navegación"""
     st.sidebar.markdown(f"""
@@ -744,9 +747,9 @@ def menu_lateral():
     
     st.sidebar.markdown("---")
     
-    # Menú de navegación
+    # Menú de navegación - Sincronizado con st.session_state.pagina
     opciones = {
-        "🏠 Dashboard": "dashboard",
+        "🏠 Salpicadero": "dashboard",
         "💰 Calculadora": "calculadora",
         "💍 Crear Boda": "crear_boda",
         "🎨 Temas": "temas",
@@ -754,7 +757,22 @@ def menu_lateral():
         "🔍 Buscar Horario": "buscar_horario"
     }
     
-    seleccion = st.sidebar.radio("📍 Navegación", list(opciones.keys()), label_visibility="collapsed")
+    # Encontrar el índice de la página actual
+    pagina_actual = st.session_state.get('pagina', 'dashboard')
+    opciones_lista = list(opciones.keys())
+    valores_lista = list(opciones.values())
+    
+    try:
+        indice_actual = valores_lista.index(pagina_actual)
+    except ValueError:
+        indice_actual = 0
+    
+    seleccion = st.sidebar.radio(
+        "📍 Navegación", 
+        opciones_lista,
+        index=indice_actual,
+        label_visibility="collapsed"
+    )
     
     st.sidebar.markdown("---")
     
@@ -795,7 +813,7 @@ def menu_lateral():
     
     return opciones[seleccion]
 
-#  APLICACIÓN PRINCIPAL 
+# ==================== APLICACIÓN PRINCIPAL ====================
 def main():
     """Función principal de la aplicación"""
     
