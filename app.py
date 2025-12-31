@@ -1,4 +1,4 @@
-# INTERFAZ PRINCIPAL
+# INTERFAZ PRINCIPAL - VERSIÓN MEJORADA
 
 import streamlit as st
 import pandas as pd
@@ -6,109 +6,20 @@ from datetime import datetime, timedelta
 import os
 import sys
 
-# Añadir directorio actual al path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Importaciones
+from Logic.config import ConfiguracionApp, ColorPaleta, obtener_colores, obtener_temas, obtener_paquetes
+from Logic.wedding_manager import DreamWeddingPlanner
+from Logic.budget_calculator import CalculadoraPresupuesto
+from Logic.models import TipoBoda, EstadoEvento, TipoRecurso
 
-# ==================== IMPORTACIÓN SEGURA ====================
-try:
-    # Intento 1: Importar directamente desde archivos
-    from Logic.config import obtener_colores as get_colors
-    from Logic.config import obtener_temas as get_themes
-    from Logic.config import obtener_paquetes as get_packages
-    from Logic.wedding_manager import DreamWeddingPlanner
-    from Logic.budget_calculator import CalculadoraPresupuesto
-    
-    # Crear instancias
-    planner = DreamWeddingPlanner()
-    calculadora = CalculadoraPresupuesto()
-    
-    # Crear alias para compatibilidad
-    obtener_colores = get_colors
-    obtener_temas = get_themes
-    obtener_paquetes = get_packages
-    
-    IMPORT_SUCCESS = True
-    print("✅ Importación exitosa desde archivos individuales")
-    
-except ImportError as e1:
-    print(f"Intento 1 falló: {e1}")
-    
-    try:
-        # Intento 2: Importar el módulo completo
-        import Logic
-        
-        # Acceder a las funciones desde el módulo
-        obtener_colores = Logic.obtener_colores
-        obtener_temas = Logic.obtener_temas
-        obtener_paquetes = Logic.obtener_paquetes
-        planner = Logic.planner
-        calculadora = Logic.calculadora
-        
-        IMPORT_SUCCESS = True
-        print("✅ Importación exitosa desde módulo Logic")
-        
-    except ImportError as e2:
-        print(f"Intento 2 falló: {e2}")
-        
-        # Crear funciones dummy
-        def obtener_colores():
-            return {
-                "ROSADO_PASTEL": "#FFE4E6",
-                "ROSADO_SUAVE": "#F8C8D0",
-                "ROSADO_PROFUNDO": "#F4A6B8",
-                "ROJO_PASTEL": "#FF6B6B",
-                "BLANCO_NIEVE": "#FFFFFF",
-                "BLANCO_HUESO": "#FFF8F0",
-                "DORADO_SUAVE": "#FFD700",
-                "PLATEADO_SUAVE": "#C0C0C0",
-                "DORADO_OPACO": "#D4AF37",
-                "PLATEADO_OPACO": "#A8A8A8"
-            }
-        
-        def obtener_temas():
-            return {
-                "Romántico Vintage": {
-                    "colores": ["Blanco", "Marfil", "Rosa pálido", "Dorado"],
-                    "decoracion": "Flores vintage, candelabros, muebles antiguos",
-                    "precio_base": 5000
-                }
-            }
-        
-        def obtener_paquetes():
-            return {
-                "Boda Pequeña": {
-                    "invitados": "50-80 personas",
-                    "precio_base": 15000,
-                    "incluye": ["Ceremonia íntima", "Coctel básico", "Fotógrafo (4h)", "Decoración simple"]
-                }
-            }
-        
-        class DummyPlanner:
-            def obtener_estadisticas(self):
-                return {
-                    "total_eventos": 0,
-                    "eventos_confirmados": 0,
-                    "eventos_pendientes": 0,
-                    "ingresos_totales": 0,
-                    "recursos_totales": 0,
-                    "recursos_disponibles": 0
-                }
-            
-            def obtener_eventos_proximos(self, dias):
-                return []
-            
-            def obtener_todos_recursos(self):
-                return []
-        
-        class DummyCalculator:
-            def calcular(self, selecciones):
-                return 0, []
-        
-        planner = DummyPlanner()
-        calculadora = DummyCalculator()
-        IMPORT_SUCCESS = False
-        
-        st.warning("⚠️ Usando datos de demostración. Algunas funciones pueden estar limitadas.")
+# Crear instancias globales
+if 'planner' not in st.session_state:
+    st.session_state.planner = DreamWeddingPlanner()
+if 'calculadora' not in st.session_state:
+    st.session_state.calculadora = CalculadoraPresupuesto()
+
+planner = st.session_state.planner
+calculadora = st.session_state.calculadora
 
 # Configuración de página
 st.set_page_config(
@@ -118,69 +29,145 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==================== ESTILOS CSS ====================
+#  ESTILOS CSS MEJORADOS 
 def aplicar_estilos():
-    """Aplica estilos CSS personalizados"""
-    try:
-        colores = obtener_colores()
-    except Exception as e:
-        st.error(f"Error obteniendo colores: {e}")
-        # Colores por defecto
-        colores = {
-            "ROSADO_PASTEL": "#FFE4E6",
-            "BLANCO_NIEVE": "#FFFFFF",
-            "DORADO_OPACO": "#D4AF37"
-        }
-    
+    """Aplica estilos CSS personalizados mejorados"""
     st.markdown(f"""
     <style>
+        /* Estilos generales */
         .stApp {{
-            background-color: {colores['BLANCO_NIEVE']};
+            background: linear-gradient(135deg, {ColorPaleta.BLANCO_NIEVE.value} 0%, {ColorPaleta.ROSADO_PASTEL.value} 100%);
         }}
         
+        /* Tarjetas de boda */
         .wedding-card {{
-            background-color: {colores['ROSADO_PASTEL']};
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            border-left: 5px solid {colores['DORADO_OPACO']};
+            background-color: {ColorPaleta.BLANCO_NIEVE.value};
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            border-left: 6px solid {ColorPaleta.DORADO_OPACO.value};
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }}
         
+        .wedding-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }}
+        
+        /* Tarjetas de métricas */
         .metric-card {{
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
+            background: linear-gradient(135deg, {ColorPaleta.BLANCO_NIEVE.value} 0%, {ColorPaleta.ROSADO_PASTEL.value} 100%);
+            border-radius: 15px;
+            padding: 20px;
             text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 2px solid {ColorPaleta.DORADO_SUAVE.value};
+        }}
+        
+        /* Tarjetas de paquetes */
+        .package-card {{
+            background-color: {ColorPaleta.BLANCO_NIEVE.value};
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px;
+            border: 3px solid {ColorPaleta.ROSADO_PROFUNDO.value};
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+            transition: all 0.3s ease;
+        }}
+        
+        .package-card:hover {{
+            border-color: {ColorPaleta.DORADO_SUAVE.value};
+            transform: scale(1.02);
+        }}
+        
+        /* Títulos */
+        h1 {{
+            color: {ColorPaleta.DORADO_OPACO.value} !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-weight: 700 !important;
+        }}
+        
+        h2, h3 {{
+            color: {ColorPaleta.GRIS_OSCURO.value} !important;
+            font-weight: 600 !important;
+        }}
+        
+        /* Botones mejorados */
+        .stButton > button {{
+            background: linear-gradient(135deg, {ColorPaleta.ROSADO_SUAVE.value} 0%, {ColorPaleta.ROSADO_PROFUNDO.value} 100%);
+            color: {ColorPaleta.NEGRO.value} !important;
+            font-weight: 600 !important;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }}
         
-        .package-card {{
-            background-color: {colores['ROSADO_PASTEL']};
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px;
-            border: 2px solid {colores.get('ROSADO_PROFUNDO', '#F4A6B8')};
-        }}
-        
-        h1, h2, h3 {{
-            color: {colores['DORADO_OPACO']} !important;
-        }}
-        
-        .stButton > button {{
-            background-color: {colores.get('ROSADO_SUAVE', '#F8C8D0')};
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-        }}
-        
         .stButton > button:hover {{
-            background-color: {colores.get('ROSADO_PROFUNDO', '#F4A6B8')};
+            background: linear-gradient(135deg, {ColorPaleta.ROSADO_PROFUNDO.value} 0%, {ColorPaleta.ROJO_PASTEL.value} 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }}
+        
+        /* Inputs mejorados */
+        .stTextInput > div > div > input,
+        .stNumberInput > div > div > input,
+        .stDateInput > div > div > input,
+        .stTimeInput > div > div > input {{
+            border: 2px solid {ColorPaleta.ROSADO_PASTEL.value} !important;
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+        }}
+        
+        /* Selectbox mejorado */
+        .stSelectbox > div > div {{
+            border: 2px solid {ColorPaleta.ROSADO_PASTEL.value} !important;
+            border-radius: 8px !important;
+        }}
+        
+        /* Texto en contraste */
+        p, li, span, label {{
+            color: {ColorPaleta.GRIS_OSCURO.value} !important;
+            font-weight: 500 !important;
+        }}
+        
+        /* Sidebar mejorado */
+        [data-testid="stSidebar"] {{
+            background: linear-gradient(180deg, {ColorPaleta.BLANCO_NIEVE.value} 0%, {ColorPaleta.ROSADO_PASTEL.value} 100%);
+        }}
+        
+        /* Alertas */
+        .stAlert {{
+            border-radius: 10px;
+            font-weight: 500;
+        }}
+        
+        /* Expander */
+        .streamlit-expanderHeader {{
+            background-color: {ColorPaleta.ROSADO_PASTEL.value} !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+        }}
+        
+        /* DataFrames */
+        .dataframe {{
+            border: 2px solid {ColorPaleta.ROSADO_PASTEL.value} !important;
+            border-radius: 10px !important;
+        }}
+        
+        /* Success/Info boxes con mejor contraste */
+        .stSuccess, .stInfo {{
+            background-color: {ColorPaleta.BLANCO_NIEVE.value} !important;
+            color: {ColorPaleta.GRIS_OSCURO.value} !important;
+            border: 2px solid {ColorPaleta.DORADO_SUAVE.value} !important;
         }}
     </style>
     """, unsafe_allow_html=True)
 
-# ==================== PÁGINAS (igual que antes pero usando las funciones importadas) ====================
+#  PÁGINAS 
+
 def pagina_dashboard():
     """Página principal del dashboard"""
     st.title("🏠 Dashboard - Dream Wedding Planner")
@@ -190,232 +177,341 @@ def pagina_dashboard():
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Eventos", stats["total_eventos"])
+        st.markdown(f"""
+        <div class="metric-card">
+            <h3 style="color: {ColorPaleta.DORADO_OPACO.value};">📊 Total Eventos</h3>
+            <h1 style="color: {ColorPaleta.GRIS_OSCURO.value};">{stats["total_eventos"]}</h1>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col2:
-        st.metric("Eventos Confirmados", stats["eventos_confirmados"])
+        st.markdown(f"""
+        <div class="metric-card">
+            <h3 style="color: {ColorPaleta.DORADO_OPACO.value};">✅ Confirmados</h3>
+            <h1 style="color: {ColorPaleta.GRIS_OSCURO.value};">{stats["eventos_confirmados"]}</h1>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col3:
-        st.metric("Ingresos Totales", f"${stats['ingresos_totales']:,}")
+        st.markdown(f"""
+        <div class="metric-card">
+            <h3 style="color: {ColorPaleta.DORADO_OPACO.value};">💰 Ingresos</h3>
+            <h1 style="color: {ColorPaleta.GRIS_OSCURO.value};">${stats['ingresos_totales']:,.0f}</h1>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col4:
-        st.metric("Recursos Disponibles", f"{stats['recursos_disponibles']}/{stats['recursos_totales']}")
+        st.markdown(f"""
+        <div class="metric-card">
+            <h3 style="color: {ColorPaleta.DORADO_OPACO.value};">🛏️ Recursos</h3>
+            <h1 style="color: {ColorPaleta.GRIS_OSCURO.value};">{stats['recursos_disponibles']}/{stats['recursos_totales']}</h1>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
     
     # Próximos eventos
-    st.subheader("📅 Próximas Bodas")
+    st.subheader("📅 Próximas Bodas (30 días)")
     eventos_proximos = planner.obtener_eventos_proximos(30)
     
     if eventos_proximos:
         for evento in eventos_proximos:
-            with st.expander(f"{evento.nombre} - {evento.inicio.strftime('%d/%m/%Y')}"):
+            with st.expander(f"💍 {evento.nombre} - {evento.inicio.strftime('%d/%m/%Y')}"):
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.write(f"**Fecha:** {evento.inicio.strftime('%d/%m/%Y')}")
-                    st.write(f"**Hora:** {evento.inicio.strftime('%H:%M')}")
-                    st.write(f"**Tipo:** {evento.tipo_boda}")
+                    st.write(f"**📅 Fecha:** {evento.inicio.strftime('%d/%m/%Y')}")
+                    st.write(f"**🕐 Hora:** {evento.inicio.strftime('%H:%M')} - {evento.fin.strftime('%H:%M')}")
+                    st.write(f"**🎨 Tipo:** {evento.tipo_boda.value}")
                 with col2:
-                    st.write(f"**Presupuesto:** ${evento.presupuesto:,}")
-                    st.write(f"**Estado:** {evento.estado}")
+                    st.write(f"**💰 Presupuesto:** ${evento.presupuesto:,.2f}")
+                    st.write(f"**👥 Invitados:** {evento.num_invitados}")
+                    st.write(f"**📊 Estado:** {evento.estado.value}")
+                
+                if evento.descripcion:
+                    st.write(f"**📝 Descripción:** {evento.descripcion}")
+                
+                col_btn1, col_btn2 = st.columns(2)
+                with col_btn1:
+                    if st.button(f"🗑️ Eliminar", key=f"del_{evento.id}"):
+                        exito, mensaje = planner.eliminar_evento(evento.id)
+                        if exito:
+                            st.success(mensaje)
+                            st.rerun()
+                        else:
+                            st.error(mensaje)
     else:
-        st.info("No hay bodas programadas en los próximos 30 días")
+        st.info("📭 No hay bodas programadas en los próximos 30 días")
+    
+    st.markdown("---")
     
     # Acciones rápidas
     st.subheader("🚀 Acciones Rápidas")
     col1, col2, col3 = st.columns(3)
+    
     with col1:
-        if st.button("💒 Crear Nueva Boda", use_container_width=True):
+        if st.button("💍 Crear Nueva Boda", use_container_width=True, type="primary"):
             st.session_state.pagina = "crear_boda"
             st.rerun()
+    
     with col2:
         if st.button("💰 Calcular Presupuesto", use_container_width=True):
             st.session_state.pagina = "calculadora"
             st.rerun()
+    
     with col3:
-        if st.button("🏛️ Ver Recursos", use_container_width=True):
+        if st.button("🛏️ Ver Recursos", use_container_width=True):
             st.session_state.pagina = "recursos"
             st.rerun()
 
-def pagina_calculadora():
-    """Calculadora de presupuesto"""
-    st.title("💰 Calculadora de Presupuesto Personalizado")
-    
-    if 'selecciones' not in st.session_state:
-        st.session_state.selecciones = {}
-    
-    tab1, tab2, tab3, tab4 = st.tabs(["🏛️ Ceremonia", "👥 Personal", "🎉 Recepción", "🎨 Decoración"])
-    
-    with tab1:
-        st.subheader("Lugar de Ceremonia")
-        opciones_ceremonia = {
-            "jardin": "Jardín (150-200 personas) - $2,000",
-            "salon": "Salón (100-250 personas) - $3,000", 
-            "capilla": "Capilla (100-300 personas) - $4,000",
-            "playa": "Playa (80-120 personas) - $5,000"
-        }
-        ceremonia = st.radio(
-            "Selecciona el lugar de ceremonia:",
-            options=list(opciones_ceremonia.keys()),
-            format_func=lambda x: opciones_ceremonia[x],
-            index=None
-        )
-        if ceremonia:
-            st.session_state.selecciones['ceremonia'] = ceremonia
-    
-    with tab2:
-        st.subheader("Personal de Servicio")
-        personal_opciones = {
-            "coordinador_bodas": ("Coordinador de Bodas", 2500),
-            "fotografo_principal": ("Fotógrafo Principal", 3000),
-            "video_profesional": ("Video Profesional", 2000),
-            "dj_musica": ("DJ/Música", 1500)
-        }
-        for key, (nombre, precio) in personal_opciones.items():
-            if st.checkbox(f"{nombre} - ${precio:,}", key=f"personal_{key}"):
-                st.session_state.selecciones[key] = 1
-            elif key in st.session_state.selecciones:
-                del st.session_state.selecciones[key]
-    
-    with tab3:
-        st.subheader("Lugar de Recepción")
-        opciones_recepcion = {
-            "salon_principal": "Salón Principal - $5,000",
-            "terraza": "Terraza - $3,000",
-            "jardin_exterior": "Jardín Exterior - $4,000"
-        }
-        recepcion = st.radio(
-            "Selecciona el lugar de recepción:",
-            options=list(opciones_recepcion.keys()),
-            format_func=lambda x: opciones_recepcion[x],
-            index=None
-        )
-        if recepcion:
-            st.session_state.selecciones['recepcion'] = recepcion
-    
-    with tab4:
-        st.subheader("Decoración")
-        decoracion_opciones = {
-            "arco_floral": ("Arco Floral", 800),
-            "centro_mesa": ("Centros de Mesa", 50),
-            "candelabros": ("Candelabros", 300)
-        }
-        for key, (nombre, precio) in decoracion_opciones.items():
-            cantidad = st.number_input(
-                f"{nombre} - ${precio:,}",
-                min_value=0,
-                max_value=100,
-                value=st.session_state.selecciones.get(key, 0),
-                key=f"decor_{key}"
-            )
-            if cantidad > 0:
-                st.session_state.selecciones[key] = cantidad
-            elif key in st.session_state.selecciones:
-                del st.session_state.selecciones[key]
-    
-    st.markdown("---")
-    col1, col2 = st.columns([1, 3])
-    
-    with col1:
-        if st.button("🧮 Calcular Presupuesto Total", type="primary", use_container_width=True):
-            if st.session_state.selecciones:
-                total, detalles = calculadora.calcular(st.session_state.selecciones)
-                st.session_state.resultado_calculo = {"total": total, "detalles": detalles}
-            else:
-                st.warning("Por favor, selecciona al menos una opción")
-    
-    if 'resultado_calculo' in st.session_state:
-        resultado = st.session_state.resultado_calculo
-        colores = obtener_colores()
-        
-        st.markdown(f"""
-        <div style="background-color: {colores['ROSADO_PASTEL']}; padding: 20px; border-radius: 10px; text-align: center;">
-            <h2 style="color: {colores['DORADO_OPACO']}; margin: 0;">Total: ${resultado['total']:,}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        with st.expander("📋 Ver detalles del cálculo"):
-            for detalle in resultado['detalles']:
-                st.write(f"• {detalle}")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("💾 Guardar Presupuesto", use_container_width=True):
-                st.success(f"Presupuesto de ${resultado['total']:,} guardado exitosamente")
-        with col2:
-            if st.button("🔄 Reiniciar", use_container_width=True):
-                st.session_state.selecciones = {}
-                st.session_state.pop('resultado_calculo', None)
-                st.rerun()
-
 def pagina_crear_boda():
-    """Página para crear una nueva boda"""
+    """Página para crear una nueva boda - FUNCIONAL"""
     st.title("✨ Crear Boda de Ensueño")
     
+    # Selector de paquete
+    st.subheader("1️⃣ Selecciona un Paquete")
     paquetes = obtener_paquetes()
     
     col1, col2, col3 = st.columns(3)
     
-    with col1:
-        st.markdown(f"""
-        <div class="package-card">
-            <h3>💒 Boda Pequeña</h3>
-            <h2>${paquetes['Boda Pequeña']['precio_base']:,}</h2>
-            <p><strong>Invitados:</strong> {paquetes['Boda Pequeña']['invitados']}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Seleccionar", key="btn_pequena", use_container_width=True):
-            st.session_state.paquete_seleccionado = "Boda Pequeña"
-            st.success("✅ Paquete seleccionado")
-    
-    with col2:
-        st.markdown(f"""
-        <div class="package-card">
-            <h3>💒 Boda Mediana</h3>
-            <h2>${paquetes['Boda Mediana']['precio_base']:,}</h2>
-            <p><strong>Invitados:</strong> {paquetes['Boda Mediana']['invitados']}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Seleccionar", key="btn_mediana", use_container_width=True):
-            st.session_state.paquete_seleccionado = "Boda Mediana"
-            st.success("✅ Paquete seleccionado")
-    
-    with col3:
-        st.markdown(f"""
-        <div class="package-card">
-            <h3>💒 Boda Grande</h3>
-            <h2>${paquetes['Boda Grande']['precio_base']:,}</h2>
-            <p><strong>Invitados:</strong> {paquetes['Boda Grande']['invitados']}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Seleccionar", key="btn_grande", use_container_width=True):
-            st.session_state.paquete_seleccionado = "Boda Grande"
-            st.success("✅ Paquete seleccionado")
+    for idx, paquete in enumerate(paquetes):
+        with [col1, col2, col3][idx]:
+            st.markdown(f"""
+            <div class="package-card">
+                <h3 style="color: {ColorPaleta.DORADO_OPACO.value};">💎 {paquete.nombre}</h3>
+                <h2 style="color: {ColorPaleta.GRIS_OSCURO.value};">${paquete.precio_base:,}</h2>
+                <p style="color: {ColorPaleta.GRIS_OSCURO.value};"><strong>👥 Invitados:</strong> {paquete.rango_invitados()}</p>
+                <hr>
+                <p style="color: {ColorPaleta.GRIS_OSCURO.value};"><strong>Incluye:</strong></p>
+                <ul style="text-align: left; color: {ColorPaleta.GRIS_OSCURO.value};">
+                    {"".join([f"<li>{item}</li>" for item in paquete.incluye])}
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("Seleccionar", key=f"btn_{paquete.nombre}", use_container_width=True):
+                st.session_state.paquete_seleccionado = paquete
+                st.success(f"✅ Paquete '{paquete.nombre}' seleccionado")
     
     st.markdown("---")
     
+    # Formulario de creación
     if 'paquete_seleccionado' in st.session_state:
-        st.subheader(f"📝 Detalles de la Boda - {st.session_state.paquete_seleccionado}")
+        paquete = st.session_state.paquete_seleccionado
+        
+        st.subheader(f"2️⃣ Detalles de la Boda - {paquete.nombre}")
         
         with st.form("formulario_boda"):
             col1, col2 = st.columns(2)
+            
             with col1:
-                nombre_novia = st.text_input("Nombre de la Novia")
-                fecha = st.date_input("Fecha de la Boda", min_value=datetime.today())
+                nombre_novia = st.text_input("👰 Nombre de la Novia*", key="novia")
+                fecha = st.date_input("📅 Fecha de la Boda*", min_value=datetime.today())
+                hora_inicio = st.time_input("🕐 Hora de Inicio*", value=datetime.strptime("14:00", "%H:%M").time())
+                
             with col2:
-                nombre_novio = st.text_input("Nombre del Novio")
-                num_invitados = st.number_input("Número de Invitados", min_value=10, max_value=500, value=100)
+                nombre_novio = st.text_input("🤵 Nombre del Novio*", key="novio")
+                num_invitados = st.number_input("👥 Número de Invitados*", 
+                                              min_value=paquete.invitados_min,
+                                              max_value=paquete.invitados_max,
+                                              value=paquete.invitados_min)
+                duracion = st.number_input("⏱️ Duración (horas)*", min_value=1, max_value=12, value=6)
             
-            notas = st.text_area("Notas adicionales")
+            # Selección de recursos
+            st.subheader("3️⃣ Selecciona los Recursos")
             
-            if st.form_submit_button("💍 Confirmar Boda", type="primary"):
-                if nombre_novia and nombre_novio:
-                    st.success("🎉 ¡Boda confirmada exitosamente!")
-                    with st.expander("Ver resumen de la boda"):
-                        st.write(f"**Pareja:** {nombre_novia} & {nombre_novio}")
-                        st.write(f"**Fecha:** {fecha}")
-                        st.write(f"**Paquete:** {st.session_state.paquete_seleccionado}")
-                        st.write(f"**Invitados:** {num_invitados}")
-                        st.write(f"**Presupuesto:** ${paquetes[st.session_state.paquete_seleccionado]['precio_base']:,}")
-                        if notas:
-                            st.write(f"**Notas:** {notas}")
+            col_cer, col_rec, col_per = st.columns(3)
+            
+            with col_cer:
+                st.write("**🏛️ Ceremonia:**")
+                recursos_ceremonia = planner.obtener_recursos_por_tipo(TipoRecurso.CEREMONIA)
+                recurso_ceremonia = st.selectbox(
+                    "Lugar de ceremonia",
+                    options=[r.id for r in recursos_ceremonia],
+                    format_func=lambda x: next((r.nombre for r in recursos_ceremonia if r.id == x), ""),
+                    key="ceremonia"
+                )
+            
+            with col_rec:
+                st.write("**🎉 Recepción:**")
+                recursos_recepcion = planner.obtener_recursos_por_tipo(TipoRecurso.RECEPCION)
+                recurso_recepcion = st.selectbox(
+                    "Lugar de recepción",
+                    options=[r.id for r in recursos_recepcion],
+                    format_func=lambda x: next((r.nombre for r in recursos_recepcion if r.id == x), ""),
+                    key="recepcion"
+                )
+            
+            with col_per:
+                st.write("**👥 Personal:**")
+                recursos_personal = planner.obtener_recursos_por_tipo(TipoRecurso.PERSONAL)
+                recursos_personal_sel = st.multiselect(
+                    "Selecciona el personal",
+                    options=[r.id for r in recursos_personal],
+                    format_func=lambda x: next((r.nombre for r in recursos_personal if r.id == x), ""),
+                    default=[5, 6],  # Coordinador y fotógrafo por defecto
+                    key="personal"
+                )
+            
+            notas = st.text_area("📝 Notas adicionales", key="notas")
+            
+            submitted = st.form_submit_button("💍 Crear Boda", type="primary", use_container_width=True)
+            
+            if submitted:
+                if not nombre_novia or not nombre_novio:
+                    st.error("❌ Por favor, completa los nombres de la novia y el novio")
                 else:
-                    st.error("Por favor, completa los nombres de la novia y el novio")
+                    # Crear evento
+                    inicio = datetime.combine(fecha, hora_inicio)
+                    fin = inicio + timedelta(hours=duracion)
+                    
+                    recursos_totales = [recurso_ceremonia, recurso_recepcion] + recursos_personal_sel
+                    
+                    # Calcular presupuesto
+                    presupuesto_total = paquete.precio_base
+                    for recurso_id in recursos_totales:
+                        recurso = planner._obtener_recurso(recurso_id)
+                        if recurso:
+                            presupuesto_total += recurso.precio
+                    
+                    exito, mensaje, evento_id = planner.crear_evento(
+                        nombre=f"Boda {nombre_novia} & {nombre_novio}",
+                        inicio=inicio,
+                        fin=fin,
+                        recursos=recursos_totales,
+                        tipo_boda=TipoBoda.PERSONALIZADA,
+                        presupuesto=presupuesto_total,
+                        descripcion=notas,
+                        num_invitados=num_invitados
+                    )
+                    
+                    if exito:
+                        st.success(f"🎉 {mensaje}")
+                        with st.expander("📋 Ver resumen de la boda"):
+                            st.write(f"**💑 Pareja:** {nombre_novia} & {nombre_novio}")
+                            st.write(f"**📅 Fecha:** {fecha.strftime('%d/%m/%Y')}")
+                            st.write(f"**🕐 Horario:** {hora_inicio} - {fin.strftime('%H:%M')}")
+                            st.write(f"**📦 Paquete:** {paquete.nombre}")
+                            st.write(f"**👥 Invitados:** {num_invitados}")
+                            st.write(f"**💰 Presupuesto Total:** ${presupuesto_total:,.2f}")
+                            st.write(f"**🆔 ID del Evento:** {evento_id}")
+                            if notas:
+                                st.write(f"**📝 Notas:** {notas}")
+                        
+                        if st.button("🏠 Volver al Dashboard"):
+                            st.session_state.pagina = "dashboard"
+                            st.rerun()
+                    else:
+                        st.error(f"❌ {mensaje}")
+                        
+                        # Ofrecer búsqueda de horario alternativo
+                        if "no disponible" in mensaje.lower():
+                            if st.button("🔍 Buscar Horario Alternativo"):
+                                horario_alt = planner.buscar_horario_disponible(
+                                    recursos=recursos_totales,
+                                    duracion=timedelta(hours=duracion),
+                                    fecha_inicio=inicio
+                                )
+                                if horario_alt:
+                                    inicio_alt, fin_alt = horario_alt
+                                    st.info(f"💡 Horario alternativo disponible: {inicio_alt.strftime('%d/%m/%Y %H:%M')} - {fin_alt.strftime('%H:%M')}")
+                                else:
+                                    st.warning("⚠️ No se encontraron horarios alternativos en el próximo año")
+
+def pagina_calculadora():
+    """Calculadora de presupuesto mejorada"""
+    st.title("💰 Calculadora de Presupuesto Personalizado")
+    
+    if 'selecciones_calc' not in st.session_state:
+        st.session_state.selecciones_calc = {}
+    
+    tab1, tab2, tab3 = st.tabs(["🏛️ Lugares", "👥 Personal y Servicios", "💎 Extras"])
+    
+    with tab1:
+        st.subheader("Lugares para Ceremonia y Recepción")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Ceremonia:**")
+            recursos_ceremonia = planner.obtener_recursos_por_tipo(TipoRecurso.CEREMONIA)
+            for recurso in recursos_ceremonia:
+                if st.checkbox(f"{recurso.nombre} - ${recurso.precio:,}", key=f"calc_cer_{recurso.id}"):
+                    st.session_state.selecciones_calc[recurso.nombre] = recurso.precio
+                elif recurso.nombre in st.session_state.selecciones_calc:
+                    del st.session_state.selecciones_calc[recurso.nombre]
+        
+        with col2:
+            st.write("**Recepción:**")
+            recursos_recepcion = planner.obtener_recursos_por_tipo(TipoRecurso.RECEPCION)
+            for recurso in recursos_recepcion:
+                if st.checkbox(f"{recurso.nombre} - ${recurso.precio:,}", key=f"calc_rec_{recurso.id}"):
+                    st.session_state.selecciones_calc[recurso.nombre] = recurso.precio
+                elif recurso.nombre in st.session_state.selecciones_calc:
+                    del st.session_state.selecciones_calc[recurso.nombre]
+    
+    with tab2:
+        st.subheader("Personal y Servicios")
+        recursos_personal = planner.obtener_recursos_por_tipo(TipoRecurso.PERSONAL)
+        
+        col1, col2 = st.columns(2)
+        for idx, recurso in enumerate(recursos_personal):
+            with col1 if idx % 2 == 0 else col2:
+                if st.checkbox(f"{recurso.nombre} - ${recurso.precio:,}", key=f"calc_per_{recurso.id}"):
+                    st.session_state.selecciones_calc[recurso.nombre] = recurso.precio
+                elif recurso.nombre in st.session_state.selecciones_calc:
+                    del st.session_state.selecciones_calc[recurso.nombre]
+    
+    with tab3:
+        st.subheader("Servicios Adicionales")
+        temas = obtener_temas()
+        tema_seleccionado = st.selectbox(
+            "Tema de Boda",
+            options=[None] + [t.nombre for t in temas],
+            format_func=lambda x: "Ninguno" if x is None else x
+        )
+        
+        if tema_seleccionado:
+            tema = ConfiguracionApp.obtener_tema_por_nombre(tema_seleccionado)
+            st.session_state.selecciones_calc[f"Tema {tema.nombre}"] = tema.precio_base
+        elif "Tema" in str(st.session_state.selecciones_calc):
+            keys_to_remove = [k for k in st.session_state.selecciones_calc.keys() if k.startswith("Tema")]
+            for k in keys_to_remove:
+                del st.session_state.selecciones_calc[k]
+    
+    st.markdown("---")
+    
+    # Calcular y mostrar total
+    if st.button("🧮 Calcular Presupuesto Total", type="primary", use_container_width=True):
+        if st.session_state.selecciones_calc:
+            total = sum(st.session_state.selecciones_calc.values())
+            impuestos = total * (ConfiguracionApp.IMPUESTOS / 100)
+            total_con_impuestos = total + impuestos
+            
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, {ColorPaleta.ROSADO_PASTEL.value} 0%, {ColorPaleta.ROSADO_SUAVE.value} 100%); 
+                        padding: 30px; border-radius: 15px; text-align: center; margin: 20px 0;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                <h3 style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 0;">Subtotal</h3>
+                <h1 style="color: {ColorPaleta.DORADO_OPACO.value}; margin: 10px 0;">${total:,.2f}</h1>
+                <p style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 5px;">Impuestos ({ConfiguracionApp.IMPUESTOS}%): ${impuestos:,.2f}</p>
+                <hr style="border-color: {ColorPaleta.DORADO_OPACO.value};">
+                <h2 style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 10px 0;">Total: ${total_con_impuestos:,.2f}</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.expander("📋 Ver detalles del cálculo"):
+                for nombre, precio in st.session_state.selecciones_calc.items():
+                    st.write(f"• {nombre}: ${precio:,.2f}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("💾 Guardar Presupuesto", use_container_width=True):
+                    st.success(f"✅ Presupuesto de ${total_con_impuestos:,.2f} guardado")
+            with col2:
+                if st.button("🔄 Reiniciar", use_container_width=True):
+                    st.session_state.selecciones_calc = {}
+                    st.rerun()
+        else:
+            st.warning("⚠️ Por favor, selecciona al menos una opción")
 
 def pagina_temas():
     """Página para explorar temas de boda"""
@@ -423,21 +519,36 @@ def pagina_temas():
     
     temas = obtener_temas()
     
-    for nombre, info in temas.items():
-        with st.expander(f"🎯 {nombre}"):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("**🎨 Colores principales:**")
-                for color in info['colores']:
-                    st.write(f"• {color}")
-                st.write(f"**💰 Precio base:** ${info['precio_base']:,}")
-            with col2:
-                st.write("**🏛️ Estilo de decoración:**")
-                st.info(info['decoracion'])
+    for tema in temas:
+        with st.expander(f"🎯 {tema.nombre}", expanded=False):
+            col1, col2 = st.columns([2, 1])
             
-            if st.button(f"Seleccionar '{nombre}'", key=f"btn_{nombre}"):
-                st.session_state.tema_seleccionado = nombre
-                st.success(f"✅ Tema '{nombre}' seleccionado")
+            with col1:
+                st.write(f"**🎨 Colores principales:**")
+                cols_colores = st.columns(len(tema.colores))
+                for idx, color in enumerate(tema.colores):
+                    with cols_colores[idx]:
+                        st.markdown(f"""
+                        <div style="background-color: #e0e0e0; padding: 10px; border-radius: 5px; text-align: center;">
+                            <strong style="color: {ColorPaleta.GRIS_OSCURO.value};">{color}</strong>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                st.write(f"**🛏️ Estilo de decoración:**")
+                st.info(tema.decoracion)
+            
+            with col2:
+                st.markdown(f"""
+                <div style="background-color: {ColorPaleta.ROSADO_PASTEL.value}; padding: 20px; 
+                            border-radius: 10px; text-align: center;">
+                    <h3 style="color: {ColorPaleta.GRIS_OSCURO.value};">Precio Base</h3>
+                    <h2 style="color: {ColorPaleta.DORADO_OPACO.value};">${tema.precio_base:,}</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button(f"Seleccionar", key=f"tema_{tema.nombre}", use_container_width=True):
+                    st.session_state.tema_seleccionado = tema.nombre
+                    st.success(f"✅ Tema '{tema.nombre}' seleccionado")
     
     if 'tema_seleccionado' in st.session_state:
         st.markdown("---")
@@ -448,128 +559,272 @@ def pagina_temas():
 
 def pagina_recursos():
     """Página para ver y gestionar recursos"""
-    st.title("🏛️ Recursos Disponibles")
+    st.title("🛏️ Recursos Disponibles")
     
     recursos = planner.obtener_todos_recursos()
     
     if recursos:
-        data = []
-        for recurso in recursos:
-            data.append({
-                "ID": recurso.id,
-                "Nombre": recurso.nombre,
-                "Tipo": recurso.tipo,
-                "Capacidad": recurso.capacidad,
-                "Precio": f"${recurso.precio:,}",
-                "Disponible": "✅" if recurso.disponible else "❌",
-                "Eventos Asignados": len(recurso.eventos_asignados)
-            })
-        
-        df = pd.DataFrame(data)
-        
+        # Filtros
         col1, col2 = st.columns(2)
         with col1:
+            tipos_disponibles = list(set([r.tipo.value for r in recursos]))
             tipo_filter = st.multiselect(
-                "Filtrar por Tipo",
-                options=df['Tipo'].unique(),
+                "🔍 Filtrar por Tipo",
+                options=tipos_disponibles,
                 default=[]
             )
+        
         with col2:
             disponible_filter = st.selectbox(
-                "Disponibilidad",
+                "📊 Disponibilidad",
                 options=["Todos", "Disponibles", "No Disponibles"]
             )
         
+        # Aplicar filtros
+        recursos_filtrados = recursos
         if tipo_filter:
-            df = df[df['Tipo'].isin(tipo_filter)]
+            recursos_filtrados = [r for r in recursos_filtrados if r.tipo.value in tipo_filter]
         
         if disponible_filter == "Disponibles":
-            df = df[df['Disponible'] == "✅"]
+            recursos_filtrados = [r for r in recursos_filtrados if r.disponible]
         elif disponible_filter == "No Disponibles":
-            df = df[df['Disponible'] == "❌"]
+            recursos_filtrados = [r for r in recursos_filtrados if not r.disponible]
         
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        # Mostrar recursos en tarjetas
+        st.markdown("---")
+        for recurso in recursos_filtrados:
+            with st.expander(f"{'✅' if recurso.disponible else '❌'} {recurso.nombre} - ${recurso.precio:,}"):
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    st.write(f"**🏷️ Tipo:** {recurso.tipo.value}")
+                    st.write(f"**👥 Capacidad:** {recurso.capacidad}")
+                    st.write(f"**💰 Precio:** ${recurso.precio:,}")
+                    if recurso.descripcion:
+                        st.write(f"**📝 Descripción:** {recurso.descripcion}")
+                
+                with col2:
+                    estado = "Disponible ✅" if recurso.disponible else "Ocupado ❌"
+                    st.markdown(f"""
+                    <div style="background-color: {'#d4edda' if recurso.disponible else '#f8d7da'}; 
+                                padding: 15px; border-radius: 10px; text-align: center;">
+                        <h4 style="color: {ColorPaleta.GRIS_OSCURO.value};">{estado}</h4>
+                        <p style="color: {ColorPaleta.GRIS_OSCURO.value};"><strong>Eventos:</strong> {len(recurso.eventos_asignados)}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Mostrar eventos asignados
+                if recurso.eventos_asignados:
+                    st.write("**📅 Eventos asignados:**")
+                    for evento_id, inicio, fin in recurso.eventos_asignados:
+                        evento = planner.obtener_evento_por_id(evento_id)
+                        if evento:
+                            st.write(f"• {evento.nombre}: {inicio.strftime('%d/%m/%Y %H:%M')} - {fin.strftime('%H:%M')}")
         
-        st.subheader("📊 Estadísticas")
-        col1, col2, col3 = st.columns(3)
+        # Estadísticas
+        st.markdown("---")
+        st.subheader("📊 Estadísticas de Recursos")
+        col1, col2, col3, col4 = st.columns(4)
+        
         with col1:
+            st.metric("Total", len(recursos))
+        with col2:
             disponibles = sum(1 for r in recursos if r.disponible)
             st.metric("Disponibles", disponibles)
-        with col2:
+        with col3:
             ocupados = len(recursos) - disponibles
             st.metric("Ocupados", ocupados)
-        with col3:
-            tasa = (ocupados / len(recursos)) * 100 if recursos else 0
+        with col4:
+            tasa = (ocupados / len(recursos) * 100) if recursos else 0
             st.metric("Tasa Ocupación", f"{tasa:.1f}%")
     else:
-        st.info("No hay recursos cargados en el sistema.")
+        st.info("📭 No hay recursos cargados en el sistema.")
 
-# ==================== MENÚ LATERAL ====================
+def pagina_buscar_horario():
+    """Página para buscar horarios disponibles"""
+    st.title("🔍 Buscar Horario Disponible")
+    
+    st.write("Esta herramienta te ayuda a encontrar el próximo horario disponible para los recursos que necesitas.")
+    
+    with st.form("form_buscar_horario"):
+        st.subheader("Selecciona los recursos necesarios")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**🏛️ Ceremonia:**")
+            recursos_ceremonia = planner.obtener_recursos_por_tipo(TipoRecurso.CEREMONIA)
+            recurso_cer_sel = st.selectbox(
+                "Lugar de ceremonia",
+                options=[r.id for r in recursos_ceremonia],
+                format_func=lambda x: next((r.nombre for r in recursos_ceremonia if r.id == x), "")
+            )
+            
+            st.write("**🎉 Recepción:**")
+            recursos_recepcion = planner.obtener_recursos_por_tipo(TipoRecurso.RECEPCION)
+            recurso_rec_sel = st.selectbox(
+                "Lugar de recepción",
+                options=[r.id for r in recursos_recepcion],
+                format_func=lambda x: next((r.nombre for r in recursos_recepcion if r.id == x), "")
+            )
+        
+        with col2:
+            st.write("**👥 Personal:**")
+            recursos_personal = planner.obtener_recursos_por_tipo(TipoRecurso.PERSONAL)
+            recursos_per_sel = st.multiselect(
+                "Selecciona el personal",
+                options=[r.id for r in recursos_personal],
+                format_func=lambda x: next((r.nombre for r in recursos_personal if r.id == x), ""),
+                default=[5, 6]
+            )
+        
+        duracion = st.number_input("⏱️ Duración del evento (horas)", min_value=1, max_value=12, value=6)
+        fecha_inicio_busqueda = st.date_input("📅 Buscar desde", min_value=datetime.today())
+        
+        submitted = st.form_submit_button("🔍 Buscar Horario", type="primary", use_container_width=True)
+        
+        if submitted:
+            recursos_totales = [recurso_cer_sel, recurso_rec_sel] + recursos_per_sel
+            
+            with st.spinner("Buscando horario disponible..."):
+                horario = planner.buscar_horario_disponible(
+                    recursos=recursos_totales,
+                    duracion=timedelta(hours=duracion),
+                    fecha_inicio=datetime.combine(fecha_inicio_busqueda, datetime.min.time())
+                )
+            
+            if horario:
+                inicio, fin = horario
+                st.success("✅ ¡Horario disponible encontrado!")
+                
+                st.markdown(f"""
+                <div style="background-color: {ColorPaleta.BLANCO_NIEVE.value}; 
+                            padding: 25px; border-radius: 15px; 
+                            border: 3px solid {ColorPaleta.DORADO_SUAVE.value};
+                            margin: 20px 0;">
+                    <h3 style="color: {ColorPaleta.DORADO_OPACO.value}; text-align: center;">📅 Horario Disponible</h3>
+                    <h2 style="color: {ColorPaleta.GRIS_OSCURO.value}; text-align: center;">
+                        {inicio.strftime('%d/%m/%Y')}
+                    </h2>
+                    <h3 style="color: {ColorPaleta.GRIS_OSCURO.value}; text-align: center;">
+                        {inicio.strftime('%H:%M')} - {fin.strftime('%H:%M')}
+                    </h3>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.write("**Recursos seleccionados:**")
+                for recurso_id in recursos_totales:
+                    recurso = planner._obtener_recurso(recurso_id)
+                    if recurso:
+                        st.write(f"• {recurso.nombre} - ${recurso.precio:,}")
+                
+                if st.button("💍 Crear Boda con este Horario", type="primary"):
+                    st.session_state.horario_sugerido = horario
+                    st.session_state.recursos_sugeridos = recursos_totales
+                    st.session_state.pagina = "crear_boda"
+                    st.rerun()
+            else:
+                st.error("❌ No se encontró ningún horario disponible en el próximo año para esta combinación de recursos.")
+                st.info("💡 Intenta con otros recursos o una fecha diferente.")
+
+#  MENÚ LATERAL 
 def menu_lateral():
     """Renderiza el menú lateral de navegación"""
-    colores = obtener_colores()
-    
     st.sidebar.markdown(f"""
     <div style="text-align: center; font-size: 60px; margin-bottom: 10px;">
         💍
     </div>
-    <div style="text-align: center; color: {colores['DORADO_OPACO']}; font-size: 24px; font-weight: bold; margin-bottom: 5px;">
+    <div style="text-align: center; color: {ColorPaleta.DORADO_OPACO.value}; font-size: 28px; font-weight: bold; margin-bottom: 5px;">
         Dream Wedding
     </div>
-    <div style="text-align: center; color: {colores.get('ROJO_PASTEL', '#FF6B6B')}; font-size: 14px; margin-bottom: 20px;">
+    <div style="text-align: center; color: {ColorPaleta.ROJO_PASTEL.value}; font-size: 16px; margin-bottom: 20px; font-weight: 600;">
         Planner Suite
     </div>
     """, unsafe_allow_html=True)
     
     st.sidebar.markdown("---")
     
+    # Menú de navegación
     opciones = {
         "🏠 Dashboard": "dashboard",
         "💰 Calculadora": "calculadora",
-        "💒 Crear Boda": "crear_boda",
+        "💍 Crear Boda": "crear_boda",
         "🎨 Temas": "temas",
-        "🏛️ Recursos": "recursos"
+        "🛏️ Recursos": "recursos",
+        "🔍 Buscar Horario": "buscar_horario"
     }
     
-    seleccion = st.sidebar.radio("Navegación", list(opciones.keys()))
+    seleccion = st.sidebar.radio("📍 Navegación", list(opciones.keys()), label_visibility="collapsed")
     
     st.sidebar.markdown("---")
     
+    # Estadísticas en sidebar
     try:
         stats = planner.obtener_estadisticas()
-        st.sidebar.caption(f"📊 **Estadísticas:**")
-        st.sidebar.caption(f"• Eventos: {stats['total_eventos']}")
-        st.sidebar.caption(f"• Recursos: {stats['recursos_disponibles']}/{stats['recursos_totales']} disp.")
+        st.sidebar.markdown(f"""
+        <div style="background-color: {ColorPaleta.ROSADO_PASTEL.value}; 
+                    padding: 15px; border-radius: 10px;">
+            <h4 style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 0;">📊 Estadísticas</h4>
+            <hr style="margin: 10px 0; border-color: {ColorPaleta.DORADO_OPACO.value};">
+            <p style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 5px 0;">
+                <strong>Eventos:</strong> {stats['total_eventos']}
+            </p>
+            <p style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 5px 0;">
+                <strong>Confirmados:</strong> {stats['eventos_confirmados']}
+            </p>
+            <p style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 5px 0;">
+                <strong>Recursos:</strong> {stats['recursos_disponibles']}/{stats['recursos_totales']}
+            </p>
+            <p style="color: {ColorPaleta.GRIS_OSCURO.value}; margin: 5px 0;">
+                <strong>Ingresos:</strong> ${stats['ingresos_totales']:,.0f}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     except:
-        st.sidebar.caption("📊 **Estadísticas:** No disponibles")
+        st.sidebar.caption("📊 Estadísticas no disponibles")
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("✨ Tus sueños, nuestra misión")
     
-    st.session_state.pagina = opciones[seleccion]
+    # Información de la empresa
+    st.sidebar.markdown(f"""
+    <div style="text-align: center; color: {ColorPaleta.GRIS_OSCURO.value};">
+        <p style="font-size: 12px; margin: 5px 0;"><strong>Versión:</strong> {ConfiguracionApp.VERSION}</p>
+        <p style="font-size: 11px; margin: 5px 0; font-style: italic;">✨ Tus sueños, nuestra misión</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    return opciones[seleccion]
 
-# ==================== APLICACIÓN PRINCIPAL ====================
+#  APLICACIÓN PRINCIPAL 
 def main():
     """Función principal de la aplicación"""
     
+    # Inicializar página si no existe
     if 'pagina' not in st.session_state:
         st.session_state.pagina = "dashboard"
     
+    # Aplicar estilos
     aplicar_estilos()
-    menu_lateral()
     
-    pagina = st.session_state.pagina
+    # Obtener página seleccionada del menú
+    pagina_seleccionada = menu_lateral()
+    st.session_state.pagina = pagina_seleccionada
     
-    if pagina == "dashboard":
+    # Renderizar página correspondiente
+    paginas = {
+        "dashboard": pagina_dashboard,
+        "calculadora": pagina_calculadora,
+        "crear_boda": pagina_crear_boda,
+        "temas": pagina_temas,
+        "recursos": pagina_recursos,
+        "buscar_horario": pagina_buscar_horario
+    }
+    
+    # Ejecutar página
+    if st.session_state.pagina in paginas:
+        paginas[st.session_state.pagina]()
+    else:
         pagina_dashboard()
-    elif pagina == "calculadora":
-        pagina_calculadora()
-    elif pagina == "crear_boda":
-        pagina_crear_boda()
-    elif pagina == "temas":
-        pagina_temas()
-    elif pagina == "recursos":
-        pagina_recursos()
 
 if __name__ == "__main__":
     main()
