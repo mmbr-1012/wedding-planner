@@ -165,7 +165,9 @@ dream-wedding-planner/
 ├── data/                      # Datos persistentes
 │   └── weddings.json         # Base de datos de eventos y recursos
 │
-├── app.py                    # Interfaz de usuario (Streamlit)
+├── Style/
+│   └── app.py                #Interfaz de usuario (Streamlit)
+│
 ├── run.py                    # Script de ejecución
 ├── requirements.txt          # Dependencias del proyecto
 ├── README.md                 # Este archivo
