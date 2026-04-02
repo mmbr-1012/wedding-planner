@@ -52,27 +52,17 @@ def pagina_dashboard(planner):
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        btn_crear = st.button("💍 Crear Nueva Boda", use_container_width=True, 
-                             type="primary", key="btn_dashboard_crear")
-    
+        if st.button("💍 Crear Nueva Boda", use_container_width=True,
+                     type="primary", key="btn_dashboard_crear"):
+            st.session_state._nav_destino = "crear_boda"
     with col2:
-        btn_calc = st.button("💰 Calcular Presupuesto", use_container_width=True, 
-                            key="btn_dashboard_calc")
-    
+        if st.button("💰 Calcular Presupuesto", use_container_width=True,
+                     key="btn_dashboard_calc"):
+            st.session_state._nav_destino = "calculadora"
     with col3:
-        btn_recursos = st.button("🛏️ Ver Recursos", use_container_width=True, 
-                                key="btn_dashboard_recursos")
-    
-    # Manejar clics DESPUÉS de crear todos los botones
-    if btn_crear:
-        st.session_state.pagina = "crear_boda"
-        st.rerun()
-    elif btn_calc:
-        st.session_state.pagina = "calculadora"
-        st.rerun()
-    elif btn_recursos:
-        st.session_state.pagina = "recursos"
-        st.rerun()
+        if st.button("🛏️ Ver Recursos", use_container_width=True,
+                     key="btn_dashboard_recursos"):
+            st.session_state._nav_destino = "recursos"
 
 def pagina_crear_boda(planner):
     """Página para crear una nueva boda"""
@@ -190,38 +180,65 @@ def pagina_crear_boda(planner):
                     
                     if exito:
                         st.success(f"🎉 {mensaje}")
-                        with st.expander("📋 Ver resumen de la boda"):
-                            st.write(f"**💑 Pareja:** {nombre_novia} & {nombre_novio}")
-                            st.write(f"**📅 Fecha:** {fecha.strftime('%d/%m/%Y')}")
-                            st.write(f"**🕐 Horario:** {hora_inicio} - {fin.strftime('%H:%M')}")
-                            st.write(f"**📦 Paquete:** {paquete.nombre}")
-                            st.write(f"**👥 Invitados:** {num_invitados}")
-                            st.write(f"**💰 Presupuesto Total:** ${presupuesto_total:,.2f}")
-                            st.write(f"**🆔 ID del Evento:** {evento_id}")
-                            if notas:
-                                st.write(f"**📝 Notas:** {notas}")
-                        
-                        if st.button("🏠 Volver al Dashboard"):
-                            st.session_state.pagina = "dashboard"
-                            st.rerun()
+                        # Guardar resumen en session_state para mostrarlo fuera del form
+                        st.session_state.boda_creada = {
+                            "novia": nombre_novia,
+                            "novio": nombre_novio,
+                            "fecha": fecha.strftime('%d/%m/%Y'),
+                            "horario": f"{hora_inicio} - {fin.strftime('%H:%M')}",
+                            "paquete": paquete.nombre,
+                            "invitados": num_invitados,
+                            "presupuesto": presupuesto_total,
+                            "evento_id": evento_id,
+                            "notas": notas
+                        }
+                        st.session_state.boda_error = None
                     else:
                         st.error(f"❌ {mensaje}")
-                        
-                        # Ofrecer búsqueda de horario alternativo
+                        # Guardar datos para búsqueda alternativa fuera del form
                         if "no disponible" in mensaje.lower():
-                            if st.button("🔍 Buscar Horario Alternativo"):
-                                horario_alt = planner.buscar_horario_disponible(
-                                    recursos=recursos_totales,
-                                    duracion=timedelta(hours=duracion),
-                                    fecha_inicio=inicio
-                                )
-                                if horario_alt:
-                                    inicio_alt, fin_alt = horario_alt
-                                    st.info(f"💡 Horario alternativo disponible: "
-                                          f"{inicio_alt.strftime('%d/%m/%Y %H:%M')} - "
-                                          f"{fin_alt.strftime('%H:%M')}")
-                                else:
-                                    st.warning("⚠️ No se encontraron horarios alternativos")
+                            st.session_state.boda_error = {
+                                "recursos": recursos_totales,
+                                "duracion": duracion,
+                                "inicio": inicio
+                            }
+                        else:
+                            st.session_state.boda_error = None
+
+    # ── Resultados FUERA del form (st.button no puede vivir dentro de st.form) ──
+    if st.session_state.get("boda_creada"):
+        datos = st.session_state.boda_creada
+        with st.expander("📋 Ver resumen de la boda", expanded=True):
+            st.write(f"**💑 Pareja:** {datos['novia']} & {datos['novio']}")
+            st.write(f"**📅 Fecha:** {datos['fecha']}")
+            st.write(f"**🕐 Horario:** {datos['horario']}")
+            st.write(f"**📦 Paquete:** {datos['paquete']}")
+            st.write(f"**👥 Invitados:** {datos['invitados']}")
+            st.write(f"**💰 Presupuesto Total:** ${datos['presupuesto']:,.2f}")
+            st.write(f"**🆔 ID del Evento:** {datos['evento_id']}")
+            if datos["notas"]:
+                st.write(f"**📝 Notas:** {datos['notas']}")
+        if st.button("🏠 Volver al Dashboard", key="btn_volver_dashboard"):
+            st.session_state.boda_creada = None
+            st.session_state.pagina = "dashboard"
+            st.rerun()
+
+    if st.session_state.get("boda_error"):
+        err = st.session_state.boda_error
+        if st.button("🔍 Buscar Horario Alternativo", key="btn_buscar_alt"):
+            horario_alt = planner.buscar_horario_disponible(
+                recursos=err["recursos"],
+                duracion=timedelta(hours=err["duracion"]),
+                fecha_inicio=err["inicio"]
+            )
+            if horario_alt:
+                inicio_alt, fin_alt = horario_alt
+                st.info(f"💡 Horario alternativo disponible: "
+                        f"{inicio_alt.strftime('%d/%m/%Y %H:%M')} - "
+                        f"{fin_alt.strftime('%H:%M')}")
+            else:
+                st.warning("⚠️ No se encontraron horarios alternativos")
+            st.session_state.boda_error = None
 
 def pagina_calculadora(planner, calculadora):
     """Calculadora de presupuesto"""
@@ -404,6 +421,87 @@ def pagina_recursos(planner):
     else:
         st.info("📭 No hay recursos cargados en el sistema.")
 
+def pagina_gestionar_eventos(planner):
+    """Página para ver y eliminar todos los eventos registrados"""
+    st.title("📋 Gestionar Eventos")
+
+    todos = planner.eventos  # todos los eventos, no solo próximos
+    if not todos:
+        st.info("📭 No hay eventos registrados en el sistema.")
+        return
+
+    # Filtro rápido por estado
+    estados_disponibles = list({e.estado.value for e in todos})
+    estado_filtro = st.multiselect(
+        "🔍 Filtrar por estado",
+        options=estados_disponibles,
+        default=[]
+    )
+    eventos_filtrados = [e for e in todos if e.estado.value in estado_filtro] if estado_filtro else todos
+
+    st.markdown(f"**{len(eventos_filtrados)} evento(s) encontrado(s)**")
+    st.markdown("---")
+
+    for evento in eventos_filtrados:
+        with st.expander(
+            f"💍 {evento.nombre}  ·  {evento.inicio.strftime('%d/%m/%Y %H:%M')} — {evento.fin.strftime('%H:%M')}  ·  {evento.estado.value.upper()}",
+            expanded=False
+        ):
+            col_info, col_accion = st.columns([3, 1])
+            with col_info:
+                st.write(f"**🎨 Tipo:** {evento.tipo_boda.value}")
+                st.write(f"**👥 Invitados:** {evento.num_invitados}")
+                st.write(f"**💰 Presupuesto:** ${evento.presupuesto:,.2f}")
+                st.write(f"**🆔 ID:** {evento.id}")
+                st.write(f"**📅 Creado:** {evento.fecha_creacion.strftime('%d/%m/%Y %H:%M')}")
+                if evento.descripcion:
+                    st.write(f"**📝 Notas:** {evento.descripcion}")
+                # Recursos asignados
+                if evento.recursos_solicitados:
+                    nombres = []
+                    for rid in evento.recursos_solicitados:
+                        r = planner._obtener_recurso(rid)
+                        if r:
+                            nombres.append(r.nombre)
+                    st.write(f"**🛏️ Recursos:** {', '.join(nombres)}")
+            with col_accion:
+                # Confirmación en dos pasos usando session_state
+                clave_confirm = f"confirmar_del_{evento.id}"
+                if st.session_state.get(clave_confirm):
+                    st.warning("¿Seguro/a?")
+                    col_si, col_no = st.columns(2)
+                    with col_si:
+                        if st.button("✅ Sí", key=f"si_{evento.id}"):
+                            exito, msg = planner.eliminar_evento(evento.id)
+                            if exito:
+                                st.success(msg)
+                            else:
+                                st.error(msg)
+                            st.session_state[clave_confirm] = False
+                            st.rerun()
+                    with col_no:
+                        if st.button("❌ No", key=f"no_{evento.id}"):
+                            st.session_state[clave_confirm] = False
+                            st.rerun()
+                else:
+                    if st.button("🗑️ Eliminar", key=f"del_ev_{evento.id}",
+                                 use_container_width=True):
+                        st.session_state[clave_confirm] = True
+                        st.rerun()
+
+    st.markdown("---")
+    st.subheader("📊 Resumen")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total eventos", len(todos))
+    with col2:
+        confirmados = sum(1 for e in todos if e.estado.value == "confirmado")
+        st.metric("Confirmados", confirmados)
+    with col3:
+        ingresos = sum(e.presupuesto for e in todos if e.estado.value == "confirmado")
+        st.metric("Ingresos totales", f"${ingresos:,.0f}")
+
+
 def pagina_buscar_horario(planner):
     """Página para buscar horarios disponibles"""
     st.title("🔍 Buscar Horario Disponible")
@@ -468,20 +566,29 @@ def pagina_buscar_horario(planner):
             if horario:
                 inicio, fin = horario
                 st.success("✅ ¡Horario disponible encontrado!")
-                
                 mostrar_horario_disponible(inicio, fin)
-                
                 st.write("**Recursos seleccionados:**")
                 for recurso_id in recursos_totales:
                     recurso = planner._obtener_recurso(recurso_id)
                     if recurso:
                         st.write(f"• {recurso.nombre} - ${recurso.precio:,}")
-                
-                if st.button("💍 Crear Boda con este Horario", type="primary"):
-                    st.session_state.horario_sugerido = horario
-                    st.session_state.recursos_sugeridos = recursos_totales
-                    st.session_state.pagina = "crear_boda"
-                    st.rerun()
+                # Guardar en session_state para usar el botón fuera del form
+                st.session_state.horario_encontrado = {
+                    "horario": horario,
+                    "recursos": recursos_totales
+                }
             else:
                 st.error("❌ No se encontró ningún horario disponible en el próximo año.")
                 st.info("💡 Intenta con otros recursos o una fecha diferente.")
+                st.session_state.horario_encontrado = None
+
+    # ── Botón fuera del form ──
+    if st.session_state.get("horario_encontrado"):
+        if st.button("💍 Crear Boda con este Horario", type="primary",
+                     key="btn_crear_desde_horario"):
+            datos = st.session_state.horario_encontrado
+            st.session_state.horario_sugerido = datos["horario"]
+            st.session_state.recursos_sugeridos = datos["recursos"]
+            st.session_state.horario_encontrado = None
+            st.session_state.pagina = "crear_boda"
+            st.rerun()

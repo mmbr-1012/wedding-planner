@@ -69,6 +69,7 @@ def renderizar_menu_navegacion(pagina_actual: str) -> str:
         "🏠 Salpicadero": "dashboard",
         "💰 Calculadora": "calculadora",
         "💍 Crear Boda": "crear_boda",
+        "📋 Gestionar Eventos": "gestionar_eventos",
         "🎨 Temas": "temas",
         "🛏️ Recursos": "recursos",
         "🔍 Buscar Horario": "buscar_horario"
