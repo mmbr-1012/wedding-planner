@@ -66,14 +66,7 @@ def abrir_navegador(url: str = "http://localhost:8501"):
 # ──────────────────────────────────────────────
 
 def iniciar_streamlit():
-    """
-    Lanza Streamlit apuntando a Style/app.py.
-
-    Se busca el ejecutable de streamlit en tres lugares, en orden:
-      1. Mismo directorio que el intérprete de Python activo  (entornos venv / conda)
-      2. Comando 'streamlit' disponible en el PATH del sistema
-      3. Módulo Python:  python -m streamlit  (fallback universal)
-    """
+    
     app_path = os.path.join("Style", "app.py")
 
     # ── Verificar que el archivo de entrada existe ──
